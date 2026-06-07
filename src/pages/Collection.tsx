@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Music, PenLine, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
-import SongCard from '@/components/SongCard';
 import StoryModal from '@/components/StoryModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useCollectionStore } from '@/store/collectionStore';

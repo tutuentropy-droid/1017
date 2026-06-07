@@ -20,7 +20,7 @@ export default function StoryCard({
 }: StoryCardProps) {
   const user = mockUsers.find((u) => u.id === story.userId);
   const song = mockSongs.find((s) => s.id === story.songId) as Song | undefined;
-  const { currentUser } = useUserStore();
+  useUserStore();
   const { likeStory, unlikeStory } = useStoryStore();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(story.likes);

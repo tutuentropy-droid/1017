@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import SongCard from '@/components/SongCard';
 import StoryCard from '@/components/StoryCard';
+import OnThisDay from '@/components/OnThisDay';
 import { getRandomSong, mockSongs } from '@/data/songs';
 import { useStoryStore } from '@/store/storyStore';
 import type { Song } from '@/types';
@@ -192,8 +193,28 @@ export default function Home() {
         </div>
       </section>
 
+      {/* On This Day Section */}
+      <section className="py-16 md:py-20 bg-vintage-brown relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 left-0 w-full h-full bg-noise opacity-50" />
+        </div>
+        <div className="container relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-10">
+            <h2 className="vintage-heading text-3xl md:text-4xl mb-3">
+              那年今日
+            </h2>
+            <p className="text-vintage-paper/60 font-serif">
+              翻开时光的旧报纸，重温同日那首触动心弦的歌
+            </p>
+          </div>
+          <div className="max-w-5xl mx-auto">
+            <OnThisDay />
+          </div>
+        </div>
+      </section>
+
       {/* Featured Songs */}
-      <section className="py-16 md:py-20 bg-vintage-brown">
+      <section className="py-16 md:py-20 bg-vintage-brownDark">
         <div className="container">
           <div className="flex items-end justify-between mb-10">
             <div>

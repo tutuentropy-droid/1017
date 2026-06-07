@@ -1,0 +1,81 @@
+/** @type {import('tailwindcss').Config} */
+
+export default {
+  darkMode: "class",
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: "1rem",
+        sm: "2rem",
+        lg: "4rem",
+        xl: "6rem",
+        "2xl": "8rem",
+      },
+    },
+    extend: {
+      colors: {
+        vintage: {
+          brown: "#3E2723",
+          brownLight: "#5D4037",
+          brownDark: "#2C1810",
+          gold: "#D4AF37",
+          goldLight: "#E8C96A",
+          goldDark: "#B8941F",
+          paper: "#F5E6C8",
+          paperDark: "#E8D4A8",
+          paperLight: "#FAF0D7",
+          brick: "#B7410E",
+          brickLight: "#D46233",
+          moss: "#2F4538",
+          mossLight: "#4A6B5A",
+          ink: "#2D1F14",
+          inkLight: "#4A3728",
+        },
+      },
+      fontFamily: {
+        display: ['"Playfair Display"', '"Noto Serif SC"', 'Georgia', 'serif'],
+        serif: ['"Noto Serif SC"', '"Lora"', 'Georgia', 'serif'],
+        body: ['"Lora"', '"Noto Serif SC"', 'Georgia', 'serif'],
+      },
+      backgroundImage: {
+        'noise': "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E\")",
+        'vintage-gradient': 'linear-gradient(135deg, #3E2723 0%, #5D4037 50%, #2C1810 100%)',
+        'paper-texture': 'linear-gradient(180deg, #FAF0D7 0%, #F5E6C8 100%)',
+      },
+      boxShadow: {
+        'vintage': '0 4px 20px rgba(62, 39, 35, 0.25), 0 2px 6px rgba(62, 39, 35, 0.15)',
+        'vintage-lg': '0 10px 40px rgba(62, 39, 35, 0.3), 0 4px 12px rgba(62, 39, 35, 0.2)',
+        'gold-glow': '0 0 20px rgba(212, 175, 55, 0.3), 0 0 40px rgba(212, 175, 55, 0.1)',
+        'inset-paper': 'inset 0 2px 4px rgba(62, 39, 35, 0.1)',
+      },
+      borderColor: {
+        'gold': '#D4AF37',
+        'gold-light': '#E8C96A',
+      },
+      animation: {
+        'spin-slow': 'spin 20s linear infinite',
+        'spin-pause': 'spin 8s linear infinite',
+        'fade-in-up': 'fadeInUp 0.6s ease-out',
+        'fade-in': 'fadeIn 0.8s ease-out',
+        'float': 'float 6s ease-in-out infinite',
+      },
+      keyframes: {
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+      },
+    },
+  },
+  plugins: [],
+};

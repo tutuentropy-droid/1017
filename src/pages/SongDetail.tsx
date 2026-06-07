@@ -110,20 +110,20 @@ export default function SongDetail() {
         <div className="container relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 items-start">
             {/* Cover */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 relative z-20">
               <div className="relative max-w-sm mx-auto lg:mx-0">
-                <div className="absolute -inset-4 bg-vintage-gold/5 rounded-3xl" />
+                <div className="absolute -inset-4 bg-vintage-gold/5 rounded-3xl -z-10" />
                 <div className="relative group">
-                  <div className="absolute inset-0 vinyl-record animate-spin-slow opacity-60 blur-sm" />
+                  <div className="absolute inset-0 vinyl-record animate-spin-slow opacity-60 blur-sm -z-10" />
                   <img
                     src={song.coverUrl}
                     alt={song.title}
                     className="relative w-full aspect-square rounded-2xl object-cover shadow-vintage-lg border-4 border-vintage-gold/30"
                   />
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-vintage-brownDark/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-vintage-brownDark/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                 </div>
 
-                <div className="flex items-center justify-center gap-4 mt-6">
+                <div className="flex items-center justify-center gap-4 mt-6 relative z-30">
                   <button
                     onClick={toggleCollect}
                     className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all duration-300 ${

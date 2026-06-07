@@ -3,11 +3,17 @@ import { Link } from 'react-router-dom';
 import { Heart, Music, PenLine, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import SongCard from '@/components/SongCard';
 import StoryModal from '@/components/StoryModal';
+import ConfirmModal from '@/components/ConfirmModal';
 import { useCollectionStore } from '@/store/collectionStore';
 import { useUserStore } from '@/store/userStore';
 import { useStoryStore } from '@/store/storyStore';
 import { mockSongs } from '@/data/songs';
 import type { Song } from '@/types';
+
+interface PendingAction {
+  type: 'remove-collection' | 'delete-story';
+  targetId: string;
+}
 
 export default function Collection() {
   const { currentUser } = useUserStore();
@@ -15,6 +21,7 @@ export default function Collection() {
   const { getStoryByUserAndSong, deleteStory } = useStoryStore();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [modalSong, setModalSong] = useState<Song | null>(null);
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
 
   const collections = getUserCollections(currentUser.id);
   const collectedSongs = collections
@@ -28,16 +35,22 @@ export default function Collection() {
   const handleRemove = (e: React.MouseEvent, songId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    if (confirm('确定要取消收藏这首歌吗？')) {
-      removeCollection(currentUser.id, songId);
-    }
+    setPendingAction({ type: 'remove-collection', targetId: songId });
   };
 
   const handleDeleteStory = (e: React.MouseEvent, storyId: string) => {
     e.stopPropagation();
-    if (confirm('确定要删除这个故事吗？')) {
-      deleteStory(storyId);
+    setPendingAction({ type: 'delete-story', targetId: storyId });
+  };
+
+  const confirmAction = () => {
+    if (!pendingAction) return;
+    if (pendingAction.type === 'remove-collection') {
+      removeCollection(currentUser.id, pendingAction.targetId);
+    } else if (pendingAction.type === 'delete-story') {
+      deleteStory(pendingAction.targetId);
     }
+    setPendingAction(null);
   };
 
   return (
@@ -222,6 +235,25 @@ export default function Collection() {
           }
         />
       )}
+
+      <ConfirmModal
+        isOpen={!!pendingAction}
+        type="danger"
+        title={
+          pendingAction?.type === 'remove-collection'
+            ? '取消收藏'
+            : '删除故事'
+        }
+        message={
+          pendingAction?.type === 'remove-collection'
+            ? '确定要取消收藏这首歌吗？\n收藏记录将被移除。'
+            : '确定要删除这个故事吗？\n此操作无法撤销。'
+        }
+        confirmText="确定删除"
+        cancelText="再想想"
+        onConfirm={confirmAction}
+        onCancel={() => setPendingAction(null)}
+      />
     </div>
   );
 }

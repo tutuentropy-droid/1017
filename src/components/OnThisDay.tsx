@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { CalendarDays, Radio, Disc3, Newspaper, Music2, RotateCcw, Sparkles, Volume2, CheckCircle } from 'lucide-react';
 import { getRandomOnThisDay, getCurrentMonthDay } from '@/data/onThisDay';
 import type { OnThisDaySong, EntertainmentNews } from '@/data/onThisDay';
+import LyricDanmaku from '@/components/LyricDanmaku';
+import NostalgiaPopup from '@/components/NostalgiaPopup';
 
 type GlitchMode = 'none' | 'tape' | 'cd' | 'radio' | 'tv' | 'bsod';
 
@@ -98,6 +100,15 @@ export default function OnThisDay() {
   const [repairCount, setRepairCount] = useState(0);
   const [repairSuccess, setRepairSuccess] = useState<RepairType>(null);
   const [noGlitchHint, setNoGlitchHint] = useState(false);
+  const [popupData, setPopupData] = useState<{
+    isOpen: boolean;
+    lyric: string;
+    songId: string;
+    songTitle: string;
+    artist: string;
+    year: number;
+  }>({ isOpen: false, lyric: '', songId: '', songTitle: '', artist: '', year: 0 });
+  const [danmakuEnabled, setDanmakuEnabled] = useState(true);
 
   const today = new Date();
   const monthDay = getCurrentMonthDay();
@@ -278,6 +289,20 @@ export default function OnThisDay() {
     });
   }, [glitch.mode, glitch.showSnow, glitch.intensity, performRepair]);
 
+  const handleDanmakuClick = useCallback((data: {
+    lyric: string;
+    songId: string;
+    songTitle: string;
+    artist: string;
+    year: number;
+  }) => {
+    setPopupData({ ...data, isOpen: true });
+  }, []);
+
+  const handlePopupClose = useCallback(() => {
+    setPopupData((prev) => ({ ...prev, isOpen: false }));
+  }, []);
+
   if (!data) {
     return (
       <div className="vintage-card p-8 text-center">
@@ -350,8 +375,7 @@ export default function OnThisDay() {
     <div
       className={`nostalgia-container vintage-tv-frame ${isShaking ? 'animate-window-shake' : ''}`}
     >
-      <div
-        className={`relative rounded-xl overflow-hidden bg-vintage-paper ${
+      <div className={`relative rounded-xl overflow-hidden bg-vintage-paper ${
           glitch.mode === 'tape' ? 'tape-warp' : ''
         } ${glitch.mode === 'cd' ? 'cd-glitch' : ''} ${
           glitch.mode === 'radio' ? 'radio-distort' : ''
@@ -360,6 +384,18 @@ export default function OnThisDay() {
         }`}
         style={{ minHeight: '500px' }}
       >
+        {data && (
+          <LyricDanmaku
+            lyrics={data.song.lyrics}
+            songId={data.song.id}
+            songTitle={data.song.title}
+            artist={data.song.artist}
+            year={data.song.year}
+            onDanmakuClick={handleDanmakuClick}
+            enabled={danmakuEnabled && glitch.mode === 'none'}
+            containerHeight={500}
+          />
+        )}
         <div className="vintage-tv-knobs">
           <div className="vintage-tv-knob" />
           <div className="vintage-tv-knob" />
@@ -586,11 +622,32 @@ export default function OnThisDay() {
                   <Sparkles size={16} />
                   <span>调整天线</span>
                 </button>
+                <button
+                  onClick={() => setDanmakuEnabled(!danmakuEnabled)}
+                  className={`${
+                    danmakuEnabled
+                      ? 'vintage-btn-gold'
+                      : 'vintage-btn-outline'
+                  } !py-2 !px-4 text-sm`}
+                  title={danmakuEnabled ? '关闭歌词弹幕' : '开启歌词弹幕'}
+                >
+                  <Music2 size={16} />
+                  <span>{danmakuEnabled ? '歌词弹幕 开' : '歌词弹幕 关'}</span>
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <NostalgiaPopup
+        isOpen={popupData.isOpen}
+        onClose={handlePopupClose}
+        lyric={popupData.lyric}
+        songId={popupData.songId}
+        songTitle={popupData.songTitle}
+        artist={popupData.artist}
+        year={popupData.year}
+      />
     </div>
   );
 }

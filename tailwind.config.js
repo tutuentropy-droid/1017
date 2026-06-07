@@ -69,6 +69,10 @@ export default {
         'text-glitch': 'textGlitch 2s infinite',
         'window-shake': 'windowShake 0.5s',
         'bsod-blink': 'bsodBlink 1s infinite',
+        'danmaku-slow': 'danmakuMove 18s linear forwards',
+        'danmaku-normal': 'danmakuMove 14s linear forwards',
+        'danmaku-fast': 'danmakuMove 10s linear forwards',
+        'popup-bounce-in': 'popupBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
       },
       keyframes: {
         fadeInUp: {
@@ -144,6 +148,18 @@ export default {
         bsodBlink: {
           '0%, 50%, 100%': { opacity: '1' },
           '25%, 75%': { opacity: '0.7' },
+        },
+        danmakuMove: {
+          '0%': { transform: 'translateX(100vw)', opacity: '0' },
+          '5%': { opacity: '1' },
+          '95%': { opacity: '1' },
+          '100%': { transform: 'translateX(-100%)', opacity: '0' },
+        },
+        popupBounceIn: {
+          '0%': { transform: 'scale(0.3)', opacity: '0' },
+          '50%': { transform: 'scale(1.05)' },
+          '70%': { transform: 'scale(0.95)' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
         },
       },
     },

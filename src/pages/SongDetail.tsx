@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -10,9 +10,12 @@ import {
   Disc3,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import StoryCard from '@/components/StoryCard';
 import StoryModal from '@/components/StoryModal';
+import LyricDanmaku from '@/components/LyricDanmaku';
+import NostalgiaPopup from '@/components/NostalgiaPopup';
 import { mockSongs } from '@/data/songs';
 import { useStoryStore } from '@/store/storyStore';
 import { useCollectionStore } from '@/store/collectionStore';
@@ -26,6 +29,29 @@ export default function SongDetail() {
   const { isCollected, addCollection, removeCollection } = useCollectionStore();
   const { getStoriesBySong, getStoryByUserAndSong } = useStoryStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [popupData, setPopupData] = useState<{
+    isOpen: boolean;
+    lyric: string;
+    songId: string;
+    songTitle: string;
+    artist: string;
+    year: number;
+  }>({ isOpen: false, lyric: '', songId: '', songTitle: '', artist: '', year: 0 });
+  const [danmakuEnabled, setDanmakuEnabled] = useState(true);
+
+  const handleDanmakuClick = useCallback((data: {
+    lyric: string;
+    songId: string;
+    songTitle: string;
+    artist: string;
+    year: number;
+  }) => {
+    setPopupData({ ...data, isOpen: true });
+  }, []);
+
+  const handlePopupClose = useCallback(() => {
+    setPopupData((prev) => ({ ...prev, isOpen: false }));
+  }, []);
 
   if (!song) {
     return (
@@ -107,6 +133,17 @@ export default function SongDetail() {
           <div className="absolute inset-0 bg-gradient-to-b from-vintage-brownDark/90 via-vintage-brownDark/95 to-vintage-brownDark" />
         </div>
 
+        <LyricDanmaku
+          lyrics={song.lyrics}
+          songId={song.id}
+          songTitle={song.title}
+          artist={song.artist}
+          year={song.year}
+          onDanmakuClick={handleDanmakuClick}
+          enabled={danmakuEnabled}
+          containerHeight={600}
+        />
+
         <div className="container relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 items-start">
             {/* Cover */}
@@ -123,7 +160,7 @@ export default function SongDetail() {
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-vintage-brownDark/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                 </div>
 
-                <div className="flex items-center justify-center gap-4 mt-6 relative z-30">
+                <div className="flex items-center justify-center gap-4 mt-6 relative z-30 flex-wrap">
                   <button
                     onClick={toggleCollect}
                     className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all duration-300 ${
@@ -144,6 +181,17 @@ export default function SongDetail() {
                   >
                     <PenLine size={18} />
                     <span>{myStory ? '编辑故事' : '写下回忆'}</span>
+                  </button>
+                  <button
+                    onClick={() => setDanmakuEnabled(!danmakuEnabled)}
+                    className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all duration-300 ${
+                      danmakuEnabled
+                        ? 'bg-vintage-moss/20 text-vintage-mossLight border border-vintage-moss/40'
+                        : 'bg-vintage-paper/10 text-vintage-paper/60 border border-vintage-paper/20 hover:bg-vintage-paper/20'
+                    }`}
+                  >
+                    <Sparkles size={18} />
+                    <span>{danmakuEnabled ? '弹幕 开' : '弹幕 关'}</span>
                   </button>
                 </div>
               </div>
@@ -243,6 +291,15 @@ export default function SongDetail() {
             ? { id: myStory.id, content: myStory.content, isPublic: myStory.isPublic }
             : null
         }
+      />
+      <NostalgiaPopup
+        isOpen={popupData.isOpen}
+        onClose={handlePopupClose}
+        lyric={popupData.lyric}
+        songId={popupData.songId}
+        songTitle={popupData.songTitle}
+        artist={popupData.artist}
+        year={popupData.year}
       />
     </div>
   );

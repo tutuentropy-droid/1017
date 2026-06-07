@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CalendarDays, Radio, Disc3, Newspaper, Music2, RotateCcw, Sparkles, Volume2 } from 'lucide-react';
+import { CalendarDays, Radio, Disc3, Newspaper, Music2, RotateCcw, Sparkles, Volume2, CheckCircle } from 'lucide-react';
 import { getRandomOnThisDay, getCurrentMonthDay } from '@/data/onThisDay';
 import type { OnThisDaySong, EntertainmentNews } from '@/data/onThisDay';
 
@@ -13,6 +13,8 @@ interface GlitchState {
   showSnow: boolean;
   showScanlines: boolean;
 }
+
+type RepairType = 'slap' | 'rewind' | 'blow' | 'antenna' | null;
 
 const GARBLED_CHARS = '▓▒░█▄▀■□◆◇○●◐◑◒◓';
 
@@ -55,6 +57,32 @@ const lyricsWithMissingChars = (lyrics: string, glitch: boolean): (string | JSX.
   });
 };
 
+const getRepairLabel = (type: RepairType): string => {
+  switch (type) {
+    case 'slap':
+      return '信号恢复！';
+    case 'rewind':
+      return '磁带卷好了！';
+    case 'blow':
+      return 'CD光头清洁完成！';
+    case 'antenna':
+      return '天线已对齐！';
+    default:
+      return '修复成功！';
+  }
+};
+
+const hasAnyGlitch = (g: GlitchState): boolean => {
+  return (
+    g.mode !== 'none' ||
+    g.intensity > 0 ||
+    g.yearGlitch ||
+    g.lyricsGlitch ||
+    g.showSnow ||
+    g.showScanlines
+  );
+};
+
 export default function OnThisDay() {
   const [data, setData] = useState<{ song: OnThisDaySong; news: EntertainmentNews } | null>(null);
   const [glitch, setGlitch] = useState<GlitchState>({
@@ -63,11 +91,13 @@ export default function OnThisDay() {
     yearGlitch: false,
     lyricsGlitch: false,
     showSnow: false,
-    showScanlines: true,
+    showScanlines: false,
   });
   const [isShaking, setIsShaking] = useState(false);
   const [displayYear, setDisplayYear] = useState('');
   const [repairCount, setRepairCount] = useState(0);
+  const [repairSuccess, setRepairSuccess] = useState<RepairType>(null);
+  const [noGlitchHint, setNoGlitchHint] = useState(false);
 
   const today = new Date();
   const monthDay = getCurrentMonthDay();
@@ -108,7 +138,7 @@ export default function OnThisDay() {
               yearGlitch: false,
               lyricsGlitch: false,
               showSnow: false,
-              showScanlines: true,
+              showScanlines: false,
             });
           }, 3000);
         }, 2000);
@@ -123,7 +153,7 @@ export default function OnThisDay() {
           yearGlitch: false,
           lyricsGlitch: false,
           showSnow: false,
-          showScanlines: true,
+          showScanlines: false,
         });
       }, duration);
     };
@@ -150,75 +180,103 @@ export default function OnThisDay() {
     return () => clearInterval(yearInterval);
   }, [data, glitch.yearGlitch]);
 
+  const performRepair = useCallback(
+    (type: RepairType, repairFn: () => boolean) => {
+      if (!hasAnyGlitch(glitch)) {
+        setNoGlitchHint(true);
+        setTimeout(() => setNoGlitchHint(false), 1500);
+        return false;
+      }
+
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
+
+      const repaired = repairFn();
+
+      if (repaired) {
+        setTimeout(() => {
+          setRepairSuccess(type);
+          setRepairCount((c) => c + 1);
+          setTimeout(() => setRepairSuccess(null), 1800);
+        }, 400);
+      }
+
+      return repaired;
+    },
+    [glitch]
+  );
+
   const handleSlapTV = useCallback(() => {
-    setIsShaking(true);
-    setRepairCount((c) => c + 1);
-    setTimeout(() => setIsShaking(false), 500);
+    performRepair('slap', () => {
+      if (glitch.mode === 'bsod') {
+        setTimeout(() => {
+          setGlitch({
+            mode: 'none',
+            intensity: 0,
+            yearGlitch: false,
+            lyricsGlitch: false,
+            showSnow: false,
+            showScanlines: false,
+          });
+        }, 300);
+        return true;
+      }
 
-    if (glitch.mode === 'bsod') {
-      setTimeout(() => {
-        setGlitch({
-          mode: 'none',
-          intensity: 0,
-          yearGlitch: false,
-          lyricsGlitch: false,
-          showSnow: false,
-          showScanlines: true,
-        });
-      }, 300);
-      return;
-    }
-
-    setGlitch((g) => ({
-      ...g,
-      intensity: Math.max(0, g.intensity - 0.15),
-      yearGlitch: false,
-      lyricsGlitch: false,
-      showSnow: false,
-      mode: 'none',
-    }));
-  }, [glitch.mode]);
+      setGlitch({
+        mode: 'none',
+        intensity: 0,
+        yearGlitch: false,
+        lyricsGlitch: false,
+        showSnow: false,
+        showScanlines: false,
+      });
+      return true;
+    });
+  }, [glitch.mode, performRepair]);
 
   const handleRewindTape = useCallback(() => {
-    setIsShaking(true);
-    setRepairCount((c) => c + 1);
-    setTimeout(() => setIsShaking(false), 500);
-
-    setGlitch({
-      mode: 'none',
-      intensity: 0,
-      yearGlitch: false,
-      lyricsGlitch: false,
-      showSnow: false,
-      showScanlines: true,
+    performRepair('rewind', () => {
+      setGlitch({
+        mode: 'none',
+        intensity: 0,
+        yearGlitch: false,
+        lyricsGlitch: false,
+        showSnow: false,
+        showScanlines: false,
+      });
+      return true;
     });
-  }, []);
+  }, [performRepair]);
 
   const handleBlowCD = useCallback(() => {
-    setIsShaking(true);
-    setRepairCount((c) => c + 1);
-    setTimeout(() => setIsShaking(false), 500);
-
-    setGlitch((g) => ({
-      ...g,
-      intensity: Math.max(0, g.intensity - 0.2),
-      lyricsGlitch: false,
-      mode: g.mode === 'cd' ? 'none' : g.mode,
-    }));
-  }, []);
+    performRepair('blow', () => {
+      const canFix = glitch.mode === 'cd' || glitch.lyricsGlitch || glitch.intensity > 0;
+      setGlitch((g) => ({
+        ...g,
+        intensity: 0,
+        lyricsGlitch: false,
+        mode: g.mode === 'cd' ? 'none' : g.mode,
+        showScanlines: g.mode === 'cd' ? false : g.showScanlines,
+      }));
+      return canFix;
+    });
+  }, [glitch.mode, glitch.lyricsGlitch, glitch.intensity, performRepair]);
 
   const handleAdjustAntenna = useCallback(() => {
-    setIsShaking(true);
-    setRepairCount((c) => c + 1);
-    setTimeout(() => setIsShaking(false), 500);
-
-    setGlitch((g) => ({
-      ...g,
-      showSnow: false,
-      intensity: Math.max(0, g.intensity - 0.25),
-      mode: g.mode === 'radio' || g.mode === 'tv' ? 'none' : g.mode,
-    }));
-  }, []);
+    performRepair('antenna', () => {
+      const canFix =
+        glitch.mode === 'radio' || glitch.mode === 'tv' || glitch.showSnow || glitch.intensity > 0;
+      setGlitch((g) => ({
+        ...g,
+        showSnow: false,
+        intensity: g.mode === 'radio' || g.mode === 'tv' ? 0 : g.intensity,
+        mode: g.mode === 'radio' || g.mode === 'tv' ? 'none' : g.mode,
+        showScanlines: g.mode === 'radio' || g.mode === 'tv' ? false : g.showScanlines,
+        yearGlitch: g.mode === 'radio' || g.mode === 'tv' ? false : g.yearGlitch,
+      }));
+      return canFix;
+    });
+  }, [glitch.mode, glitch.showSnow, glitch.intensity, performRepair]);
 
   if (!data) {
     return (
@@ -306,6 +364,28 @@ export default function OnThisDay() {
           <div className="vintage-tv-knob" />
           <div className="vintage-tv-knob" />
         </div>
+
+        {repairSuccess && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 animate-fade-in">
+            <div className="flex flex-col items-center gap-2 px-8 py-5 rounded-2xl bg-vintage-moss/95 text-vintage-paper shadow-2xl">
+              <CheckCircle size={48} className="text-green-300 animate-pulse" />
+              <span className="font-display text-xl font-semibold">
+                {getRepairLabel(repairSuccess)}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {noGlitchHint && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 animate-fade-in">
+            <div className="flex flex-col items-center gap-2 px-6 py-4 rounded-2xl bg-vintage-gold/95 text-vintage-brown shadow-2xl">
+              <Sparkles size={36} className="text-vintage-brown" />
+              <span className="font-display text-base font-semibold">
+                信号一切正常~
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="relative z-10 p-6 md:p-8">
           <div className="flex items-start justify-between mb-6">

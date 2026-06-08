@@ -9,6 +9,7 @@ import {
   Sparkles,
   ChevronRight,
   ArrowRight,
+  Gamepad2,
 } from 'lucide-react';
 import SongCard from '@/components/SongCard';
 import StoryCard from '@/components/StoryCard';
@@ -134,7 +135,7 @@ export default function Home() {
       {/* Quick Navigation */}
       <section className="py-16 md:py-20 bg-vintage-brownDark relative">
         <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
                 icon: CalendarDays,
@@ -144,18 +145,25 @@ export default function Home() {
                 color: 'from-vintage-gold/20 to-transparent',
               },
               {
+                icon: Gamepad2,
+                title: '猜歌挑战',
+                desc: '看歌词猜歌名，赢积分兑好礼',
+                link: '/guess-song',
+                color: 'from-vintage-brick/20 to-transparent',
+              },
+              {
                 icon: Heart,
                 title: '我的收藏',
                 desc: '收藏珍爱的歌曲与故事',
                 link: '/collection',
-                color: 'from-vintage-brick/20 to-transparent',
+                color: 'from-vintage-moss/20 to-transparent',
               },
               {
                 icon: BookOpen,
                 title: '记忆墙',
                 desc: '分享你的青春回忆',
                 link: '/memory-wall',
-                color: 'from-vintage-moss/20 to-transparent',
+                color: 'from-vintage-gold/20 to-transparent',
               },
             ].map((item, i) => (
               <Link

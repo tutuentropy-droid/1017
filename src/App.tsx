@@ -7,6 +7,7 @@ import SongDetail from '@/pages/SongDetail';
 import Collection from '@/pages/Collection';
 import MemoryWall from '@/pages/MemoryWall';
 import MemoryPolaroid from '@/pages/MemoryPolaroid';
+import GuessSong from '@/pages/GuessSong';
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/song/:id" element={<SongDetail />} />
             <Route path="/collection" element={<Collection />} />
             <Route path="/memory-wall" element={<MemoryWall />} />
+            <Route path="/guess-song" element={<GuessSong />} />
             <Route path="/polaroid" element={<MemoryPolaroid />} />
             <Route
               path="*"

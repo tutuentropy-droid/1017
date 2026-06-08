@@ -74,3 +74,44 @@ export interface PolaroidConfig {
   season?: string;
   mood?: string;
 }
+
+export interface GuessQuestion {
+  id: string;
+  weekNumber: number;
+  songId: string;
+  lyricLine: string;
+  correctTitle: string;
+  correctArtist: string;
+  hintYear: number;
+  hintTVShow?: string;
+  points: number;
+  isUserCreated: boolean;
+  createdBy?: string;
+  createdAt: string;
+}
+
+export interface UserGuessRecord {
+  questionId: string;
+  isCorrect: boolean;
+  usedHint: boolean;
+  pointsEarned: number;
+  guessedAt: string;
+}
+
+export type RewardType = 'tape-cover' | 'badge' | 'sticker';
+
+export interface Reward {
+  id: string;
+  name: string;
+  type: RewardType;
+  description: string;
+  cost: number;
+  imageUrl: string;
+  rarity: 'common' | 'rare' | 'legendary';
+  isLimited?: boolean;
+}
+
+export interface UserReward {
+  rewardId: string;
+  obtainedAt: string;
+}

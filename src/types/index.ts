@@ -152,3 +152,45 @@ export interface WeatherStats {
   bySeason: Record<string, number>;
   byDecade: Record<string, number>;
 }
+
+export interface DriftBottle {
+  id: string;
+  senderId: string;
+  senderNickname: string;
+  senderAvatar: string;
+  lyric: string;
+  songTitle?: string;
+  songArtist?: string;
+  story: string;
+  createdAt: string;
+  receiverId?: string;
+  reply?: DriftBottleReply;
+  status: 'floating' | 'received' | 'replied';
+}
+
+export interface DriftBottleReply {
+  id: string;
+  replierId: string;
+  replierNickname: string;
+  replierAvatar: string;
+  lyric: string;
+  songTitle?: string;
+  songArtist?: string;
+  story: string;
+  createdAt: string;
+}
+
+export interface BottleBadge {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  obtainedAt: string;
+}
+
+export interface DriftBottleStats {
+  sentCount: number;
+  receivedCount: number;
+  repliedCount: number;
+  badges: BottleBadge[];
+}

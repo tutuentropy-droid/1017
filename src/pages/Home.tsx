@@ -10,6 +10,7 @@ import {
   ChevronRight,
   ArrowRight,
   Gamepad2,
+  Waves,
 } from 'lucide-react';
 import SongCard from '@/components/SongCard';
 import StoryCard from '@/components/StoryCard';
@@ -135,7 +136,7 @@ export default function Home() {
       {/* Quick Navigation */}
       <section className="py-16 md:py-20 bg-vintage-brownDark relative">
         <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             {[
               {
                 icon: CalendarDays,
@@ -164,6 +165,13 @@ export default function Home() {
                 desc: '分享你的青春回忆',
                 link: '/memory-wall',
                 color: 'from-vintage-gold/20 to-transparent',
+              },
+              {
+                icon: Waves,
+                title: '漂流瓶',
+                desc: '投出歌词，邂逅远方知音',
+                link: '/drift-bottle',
+                color: 'from-vintage-gold/15 via-vintage-brick/10 to-transparent',
               },
             ].map((item, i) => (
               <Link

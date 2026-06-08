@@ -297,3 +297,52 @@ export interface Concert {
   coverUrl: string;
   totalViews: number;
 }
+
+export type MusicStyle =
+  | 'rock'
+  | 'pop'
+  | 'folk'
+  | 'cantopop'
+  | 'mandopop'
+  | 'ballad'
+  | 'campus';
+
+export interface StyleTag {
+  id: MusicStyle;
+  label: string;
+  color: string;
+  description: string;
+}
+
+export interface DNAPersonalityType {
+  id: string;
+  name: string;
+  title: string;
+  description: string;
+  traits: string[];
+  color: string;
+  emoji: string;
+  decadePreference: '80s' | '90s' | 'balanced';
+}
+
+export interface MusicDNAReport {
+  personality: DNAPersonalityType;
+  dominantStyles: { style: StyleTag; percentage: number }[];
+  dominantDecade: { decade: string; percentage: number };
+  dominantTags: { tag: MemoryTag; count: number }[];
+  topCollectedArtists: { artist: string; count: number }[];
+  avgYear: number;
+  recommendations: Song[];
+  generatedAt: string;
+}
+
+export interface PunchCardData {
+  reportId: string;
+  personalityCode: string;
+  personalityName: string;
+  styleCodes: string[];
+  decadeCode: string;
+  avgYear: number;
+  nickname: string;
+  generatedAt: string;
+}

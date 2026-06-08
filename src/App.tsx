@@ -12,6 +12,7 @@ import GuessSong from '@/pages/GuessSong';
 import DriftBottle from '@/pages/DriftBottle';
 import Auction from '@/pages/Auction';
 import ConcertHall from '@/pages/ConcertHall';
+import MusicDNA from '@/pages/MusicDNA';
 import VintageWeatherPopup from '@/components/VintageWeatherPopup';
 import { useWeatherStore } from '@/store/weatherStore';
 import { useUserStore } from '@/store/userStore';
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="/drift-bottle" element={<DriftBottle />} />
             <Route path="/auction" element={<Auction />} />
             <Route path="/concert-hall" element={<ConcertHall />} />
+            <Route path="/music-dna" element={<MusicDNA />} />
             <Route
               path="*"
               element={

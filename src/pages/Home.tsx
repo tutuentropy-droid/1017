@@ -12,6 +12,7 @@ import {
   Gamepad2,
   Waves,
   Mic2,
+  Dna,
 } from 'lucide-react';
 import SongCard from '@/components/SongCard';
 import StoryCard from '@/components/StoryCard';
@@ -137,7 +138,7 @@ export default function Home() {
       {/* Quick Navigation */}
       <section className="py-16 md:py-20 bg-vintage-brownDark relative">
         <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[
               {
                 icon: CalendarDays,
@@ -180,6 +181,13 @@ export default function Home() {
                 desc: '每月经典歌手 · 集体怀旧',
                 link: '/concert-hall',
                 color: 'from-vintage-brick/25 via-vintage-gold/15 to-transparent',
+              },
+              {
+                icon: Dna,
+                title: '音乐DNA',
+                desc: '测试你的怀旧人格类型',
+                link: '/music-dna',
+                color: 'from-vintage-gold/25 via-vintage-brick/15 to-transparent',
               },
             ].map((item, i) => (
               <Link

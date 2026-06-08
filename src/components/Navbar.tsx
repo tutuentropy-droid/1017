@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router-dom';
-import { Disc3, Calendar, Heart, BookOpen, Sparkles, Camera, Gamepad2, Waves, Gavel, Mic2 } from 'lucide-react';
+import { Disc3, Calendar, Heart, BookOpen, Sparkles, Camera, Gamepad2, Waves, Gavel, Mic2, Dna } from 'lucide-react';
 
 export default function Navbar() {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -66,6 +66,10 @@ export default function Navbar() {
             <NavLink to="/concert-hall" className={linkClass}>
               <Mic2 size={18} />
               <span className="hidden md:inline">演唱会</span>
+            </NavLink>
+            <NavLink to="/music-dna" className={linkClass}>
+              <Dna size={18} />
+              <span className="hidden md:inline">DNA测试</span>
             </NavLink>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   HelpCircle,
   Lightbulb,
@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Plus,
   User,
+  CircleDot,
 } from 'lucide-react';
 import type { GuessQuestion } from '@/types';
 import { useGuessStore } from '@/store/guessStore';
@@ -18,6 +19,7 @@ import { useUserStore } from '@/store/userStore';
 import {
   getCurrentWeekQuestions,
   getRandomPoolQuestion,
+  extraQuestionPool,
 } from '@/data/guessSongs';
 import { mockSongs } from '@/data/songs';
 
@@ -27,6 +29,35 @@ interface Props {
 }
 
 type QuestionStatus = 'idle' | 'correct' | 'wrong';
+
+const generateOptions = (
+  correctTitle: string,
+  correctArtist: string,
+  questionId: string
+): string[] => {
+  const allSongs = [...mockSongs, ...extraQuestionPool.map((q) => ({
+    title: q.correctTitle,
+    artist: q.correctArtist,
+  }))];
+
+  const distractors = allSongs
+    .filter(
+      (s) =>
+        !(s.title === correctTitle && s.artist === correctArtist)
+    )
+    .map((s) => `${s.title} - ${s.artist}`);
+
+  const shuffled = distractors.sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, 3);
+  const options = [...selected, `${correctTitle} - ${correctArtist}`];
+
+  const seed = questionId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  return options.sort((a, b) => {
+    const hashA = (a.split('').reduce((x, c) => x + c.charCodeAt(0), 0) + seed) % 100;
+    const hashB = (b.split('').reduce((x, c) => x + c.charCodeAt(0), 0) + seed) % 100;
+    return hashA - hashB;
+  });
+};
 
 export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) {
   const { currentUser } = useUserStore();
@@ -42,33 +73,35 @@ export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) 
 
   const [questions, setQuestions] = useState<GuessQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [titleInput, setTitleInput] = useState('');
-  const [artistInput, setArtistInput] = useState('');
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showHint, setShowHint] = useState(false);
   const [hintType, setHintType] = useState<'year' | 'tvshow'>('year');
   const [status, setStatus] = useState<QuestionStatus>('idle');
   const [earnedPoints, setEarnedPoints] = useState(0);
+  const [sessionPoints, setSessionPoints] = useState(0);
   const [activeTab, setActiveTab] = useState<'weekly' | 'extra'>('weekly');
 
   useEffect(() => {
-    const weekly = getCurrentWeekQuestions();
-    const userQuestions = userCreatedQuestions;
-    const all = [...weekly, ...userQuestions];
-    setQuestions(all);
-  }, [userCreatedQuestions]);
+    const weekly = getCurrentWeekQuestions().slice(0, 3);
+    setQuestions(weekly);
+  }, []);
 
   const currentQuestion = questions[currentIndex];
 
-  const handleSubmit = () => {
-    if (!currentQuestion || status !== 'idle') return;
+  const options = useMemo(() => {
+    if (!currentQuestion) return [];
+    return generateOptions(
+      currentQuestion.correctTitle,
+      currentQuestion.correctArtist,
+      currentQuestion.id
+    );
+  }, [currentQuestion]);
 
-    const titleMatch =
-      titleInput.trim().toLowerCase() ===
-      currentQuestion.correctTitle.toLowerCase();
-    const artistMatch =
-      artistInput.trim().toLowerCase() ===
-      currentQuestion.correctArtist.toLowerCase();
-    const isCorrect = titleMatch && artistMatch;
+  const handleSubmit = () => {
+    if (!currentQuestion || status !== 'idle' || !selectedOption) return;
+
+    const correctAnswer = `${currentQuestion.correctTitle} - ${currentQuestion.correctArtist}`;
+    const isCorrect = selectedOption === correctAnswer;
 
     let earned = 0;
     if (isCorrect) {
@@ -76,6 +109,7 @@ export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) 
         ? Math.floor(currentQuestion.points * 0.5)
         : currentQuestion.points;
       addPoints(earned);
+      setSessionPoints((prev) => prev + earned);
       setStatus('correct');
       setEarnedPoints(earned);
     } else {
@@ -97,19 +131,22 @@ export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) 
     } else {
       setCurrentIndex(0);
     }
-    setTitleInput('');
-    setArtistInput('');
+    setSelectedOption(null);
     setShowHint(false);
     setStatus('idle');
     setEarnedPoints(0);
+  };
+
+  const handleViewSongDetail = (songId: string) => {
+    handleNextQuestion();
+    window.location.href = `/song/${songId}`;
   };
 
   const handleRandomExtra = () => {
     const random = getRandomPoolQuestion();
     setQuestions([random]);
     setCurrentIndex(0);
-    setTitleInput('');
-    setArtistInput('');
+    setSelectedOption(null);
     setShowHint(false);
     setStatus('idle');
     setEarnedPoints(0);
@@ -119,6 +156,17 @@ export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) 
   const handleShowHint = (type: 'year' | 'tvshow') => {
     setHintType(type);
     setShowHint(true);
+  };
+
+  const resetToWeekly = () => {
+    const weekly = getCurrentWeekQuestions().slice(0, 3);
+    setQuestions([...weekly, ...userCreatedQuestions].slice(0, 3));
+    setCurrentIndex(0);
+    setSelectedOption(null);
+    setShowHint(false);
+    setStatus('idle');
+    setEarnedPoints(0);
+    setActiveTab('weekly');
   };
 
   const isAnswered = currentQuestion ? hasAnswered(currentQuestion.id) : false;
@@ -144,22 +192,32 @@ export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) 
   }
 
   const relatedSong = mockSongs.find((s) => s.id === currentQuestion.songId);
+  const correctAnswer = `${currentQuestion.correctTitle} - ${currentQuestion.correctArtist}`;
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="vintage-card p-4 flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-vintage-gold/15 flex items-center justify-center">
             <Trophy size={24} className="text-vintage-gold" />
           </div>
           <div>
-            <p className="text-vintage-inkLight text-xs">我的积分</p>
+            <p className="text-vintage-inkLight text-xs">总积分</p>
             <p className="vintage-heading text-2xl text-vintage-ink">{points}</p>
           </div>
         </div>
         <div className="vintage-card p-4 flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-vintage-moss/20 flex items-center justify-center">
-            <CheckCircle2 size={24} className="text-vintage-moss" />
+            <Sparkles size={24} className="text-vintage-moss" />
+          </div>
+          <div>
+            <p className="text-vintage-inkLight text-xs">本轮获得</p>
+            <p className="vintage-heading text-2xl text-vintage-moss">+{sessionPoints}</p>
+          </div>
+        </div>
+        <div className="vintage-card p-4 flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-vintage-brick/15 flex items-center justify-center">
+            <CheckCircle2 size={24} className="text-vintage-brick" />
           </div>
           <div>
             <p className="text-vintage-inkLight text-xs">答对题数</p>
@@ -169,8 +227,8 @@ export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) 
           </div>
         </div>
         <div className="vintage-card p-4 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-vintage-brick/15 flex items-center justify-center">
-            <Sparkles size={24} className="text-vintage-brick" />
+          <div className="w-12 h-12 rounded-xl bg-vintage-brownLight/50 flex items-center justify-center">
+            <CircleDot size={24} className="text-vintage-gold" />
           </div>
           <div>
             <p className="text-vintage-inkLight text-xs">正确率</p>
@@ -181,25 +239,16 @@ export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) 
         </div>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap items-center">
         <button
-          onClick={() => {
-            setActiveTab('weekly');
-            const weekly = getCurrentWeekQuestions();
-            setQuestions([...weekly, ...userCreatedQuestions]);
-            setCurrentIndex(0);
-            setTitleInput('');
-            setArtistInput('');
-            setShowHint(false);
-            setStatus('idle');
-          }}
+          onClick={resetToWeekly}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeTab === 'weekly'
               ? 'bg-vintage-gold text-vintage-brown'
               : 'bg-vintage-paperDark/50 text-vintage-inkLight hover:bg-vintage-paperDark'
           }`}
         >
-          本周挑战 ({getCurrentWeekQuestions().length}题)
+          本周挑战 (3题)
         </button>
         <button
           onClick={handleRandomExtra}
@@ -212,16 +261,17 @@ export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) 
           <RefreshCw size={14} />
           随机练手
         </button>
+        <div className="flex-1" />
         <button
           onClick={onOpenCreate}
-          className="px-4 py-2 rounded-lg text-sm font-medium bg-vintage-moss/20 text-vintage-moss hover:bg-vintage-moss/30 transition-all flex items-center gap-1"
+          className="vintage-btn-outline text-sm !py-2"
         >
           <Plus size={14} />
           我来出题
         </button>
         <button
           onClick={onOpenShop}
-          className="px-4 py-2 rounded-lg text-sm font-medium bg-vintage-brick/15 text-vintage-brick hover:bg-vintage-brick/25 transition-all ml-auto"
+          className="vintage-btn-outline text-sm !py-2"
         >
           <Trophy size={14} />
           积分兑换
@@ -232,7 +282,7 @@ export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) 
         <div className="absolute top-0 right-0 w-32 h-32 bg-vintage-gold/5 rounded-full blur-2xl" />
 
         <div className="flex items-center justify-between mb-6 relative">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="px-3 py-1 rounded-full bg-vintage-gold/15 text-vintage-gold text-xs font-medium">
               {currentQuestion.points} 积分
             </span>
@@ -242,7 +292,7 @@ export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) 
                 网友出题
               </span>
             )}
-            {isAnswered && !status && (
+            {isAnswered && status === 'idle' && (
               <span className="px-3 py-1 rounded-full bg-vintage-inkLight/10 text-vintage-inkLight text-xs font-medium">
                 已答过
               </span>
@@ -280,8 +330,7 @@ export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) 
             <div>
               <p className="text-vintage-brick font-bold">回答错误</p>
               <p className="text-vintage-inkLight text-sm">
-                正确答案：{currentQuestion.correctTitle} -{' '}
-                {currentQuestion.correctArtist}
+                正确答案：{correctAnswer}
               </p>
             </div>
           </div>
@@ -312,35 +361,61 @@ export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) 
           </div>
         )}
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-vintage-inkLight text-sm mb-2 font-medium">
-              歌名
-            </label>
-            <input
-              type="text"
-              value={titleInput}
-              onChange={(e) => setTitleInput(e.target.value)}
-              disabled={status !== 'idle'}
-              placeholder="请输入歌曲名称"
-              className="w-full py-3 px-4 bg-vintage-paperLight border border-vintage-gold/30 rounded-lg text-vintage-ink focus:outline-none focus:border-vintage-gold transition-colors disabled:opacity-50 font-serif"
-              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-            />
-          </div>
-          <div>
-            <label className="block text-vintage-inkLight text-sm mb-2 font-medium">
-              歌手
-            </label>
-            <input
-              type="text"
-              value={artistInput}
-              onChange={(e) => setArtistInput(e.target.value)}
-              disabled={status !== 'idle'}
-              placeholder="请输入歌手名称"
-              className="w-full py-3 px-4 bg-vintage-paperLight border border-vintage-gold/30 rounded-lg text-vintage-ink focus:outline-none focus:border-vintage-gold transition-colors disabled:opacity-50 font-serif"
-              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-            />
-          </div>
+        <div className="space-y-3">
+          <p className="text-vintage-inkLight text-sm font-medium mb-2">
+            请选择正确的歌名和歌手：
+          </p>
+          {options.map((option) => {
+            const isSelected = selectedOption === option;
+            const isCorrect = option === correctAnswer;
+            let optionStyle =
+              'bg-vintage-paperLight border-vintage-gold/30 hover:border-vintage-gold/60 text-vintage-ink';
+
+            if (status !== 'idle') {
+              if (isCorrect) {
+                optionStyle =
+                  'bg-vintage-moss/10 border-vintage-moss/50 text-vintage-moss';
+              } else if (isSelected) {
+                optionStyle =
+                  'bg-vintage-brick/10 border-vintage-brick/50 text-vintage-brick';
+              } else {
+                optionStyle =
+                  'bg-vintage-paperLight/50 border-vintage-gold/10 text-vintage-inkLight/50';
+              }
+            } else if (isSelected) {
+              optionStyle =
+                'bg-vintage-gold/10 border-vintage-gold text-vintage-gold';
+            }
+
+            return (
+              <button
+                key={option}
+                disabled={status !== 'idle'}
+                onClick={() => setSelectedOption(option)}
+                className={`w-full p-4 rounded-xl border-2 text-left font-serif transition-all flex items-center gap-3 disabled:cursor-not-allowed ${optionStyle}`}
+              >
+                <span
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    isSelected
+                      ? status === 'idle'
+                        ? 'border-vintage-gold bg-vintage-gold'
+                        : isCorrect
+                        ? 'border-vintage-moss bg-vintage-moss'
+                        : 'border-vintage-brick bg-vintage-brick'
+                      : 'border-current opacity-50'
+                  }`}
+                >
+                  {isSelected && status !== 'idle' && isCorrect && (
+                    <CheckCircle2 size={12} className="text-vintage-paper" />
+                  )}
+                  {isSelected && status !== 'idle' && !isCorrect && (
+                    <XCircle size={12} className="text-vintage-paper" />
+                  )}
+                </span>
+                <span className="text-sm md:text-base">{option}</span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -348,7 +423,7 @@ export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) 
             <>
               <button
                 onClick={handleSubmit}
-                disabled={!titleInput.trim() || !artistInput.trim()}
+                disabled={!selectedOption}
                 className="vintage-btn-gold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <CheckCircle2 size={18} />
@@ -378,9 +453,7 @@ export default function GuessSongChallenge({ onOpenShop, onOpenCreate }: Props) 
             <>
               {relatedSong && (
                 <button
-                  onClick={() => {
-                    window.location.href = `/song/${relatedSong.id}`;
-                  }}
+                  onClick={() => handleViewSongDetail(relatedSong.id)}
                   className="vintage-btn-outline text-sm"
                 >
                   <Music size={16} />

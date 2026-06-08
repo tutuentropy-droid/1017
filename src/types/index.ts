@@ -194,3 +194,49 @@ export interface DriftBottleStats {
   repliedCount: number;
   badges: BottleBadge[];
 }
+
+export type AuctionStatus = 'upcoming' | 'active' | 'ended';
+
+export interface AuctionBid {
+  id: string;
+  userId: string;
+  userNickname: string;
+  userAvatar: string;
+  amount: number;
+  bidAt: string;
+}
+
+export interface AuctionPlaylist {
+  id: string;
+  title: string;
+  theme: string;
+  description: string;
+  coverUrl: string;
+  year: number;
+  eraTag: string;
+  songIds: string[];
+  startingPrice: number;
+  minBidIncrement: number;
+  status: AuctionStatus;
+  startTime: string;
+  endTime: string;
+  createdBy: 'system' | string;
+  creatorNickname?: string;
+  currentBid: number;
+  currentBidderId?: string;
+  currentBidderNickname?: string;
+  currentBidderAvatar?: string;
+  bidHistory: AuctionBid[];
+  viewCount: number;
+  winnerId?: string;
+  winnerNickname?: string;
+  winnerAvatar?: string;
+  finalPrice?: number;
+}
+
+export interface UserAuctionRecord {
+  playlistId: string;
+  isWinner: boolean;
+  bids: AuctionBid[];
+  wonAt?: string;
+}

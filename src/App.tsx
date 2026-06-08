@@ -10,6 +10,7 @@ import MemoryWall from '@/pages/MemoryWall';
 import MemoryPolaroid from '@/pages/MemoryPolaroid';
 import GuessSong from '@/pages/GuessSong';
 import DriftBottle from '@/pages/DriftBottle';
+import Auction from '@/pages/Auction';
 import VintageWeatherPopup from '@/components/VintageWeatherPopup';
 import { useWeatherStore } from '@/store/weatherStore';
 import { useUserStore } from '@/store/userStore';
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="/guess-song" element={<GuessSong />} />
             <Route path="/polaroid" element={<MemoryPolaroid />} />
             <Route path="/drift-bottle" element={<DriftBottle />} />
+            <Route path="/auction" element={<Auction />} />
             <Route
               path="*"
               element={

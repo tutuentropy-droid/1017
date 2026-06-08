@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Home from '@/pages/Home';
@@ -8,8 +9,25 @@ import Collection from '@/pages/Collection';
 import MemoryWall from '@/pages/MemoryWall';
 import MemoryPolaroid from '@/pages/MemoryPolaroid';
 import GuessSong from '@/pages/GuessSong';
+import VintageWeatherPopup from '@/components/VintageWeatherPopup';
+import { useWeatherStore } from '@/store/weatherStore';
+import { useUserStore } from '@/store/userStore';
 
 export default function App() {
+  const [showWeatherPopup, setShowWeatherPopup] = useState(false);
+  const { hasShownToday, markShownToday } = useWeatherStore();
+  const { currentUser } = useUserStore();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!hasShownToday(currentUser.id)) {
+        setShowWeatherPopup(true);
+        markShownToday(currentUser.id);
+      }
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [currentUser.id, hasShownToday, markShownToday]);
+
   return (
     <Router>
       <div className="min-h-screen flex flex-col">
@@ -39,6 +57,10 @@ export default function App() {
           </Routes>
         </main>
         <Footer />
+        <VintageWeatherPopup
+          isOpen={showWeatherPopup}
+          onClose={() => setShowWeatherPopup(false)}
+        />
       </div>
     </Router>
   );

@@ -115,3 +115,40 @@ export interface UserReward {
   rewardId: string;
   obtainedAt: string;
 }
+
+export type WeatherType =
+  | 'sunny'
+  | 'cloudy'
+  | 'rainy'
+  | 'snowy'
+  | 'windy'
+  | 'foggy'
+  | 'thunderstorm'
+  | 'overcast';
+
+export interface WeatherInfo {
+  type: WeatherType;
+  label: string;
+  icon: string;
+  description: string;
+}
+
+export interface VintageWeatherRecord {
+  id: string;
+  year: number;
+  month: number;
+  day: number;
+  city: string;
+  weather: WeatherType;
+  temperature: number;
+  season: string;
+  songId: string;
+  seenAt: string;
+}
+
+export interface WeatherStats {
+  total: number;
+  byWeather: Record<WeatherType, number>;
+  bySeason: Record<string, number>;
+  byDecade: Record<string, number>;
+}

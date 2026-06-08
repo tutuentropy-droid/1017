@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Music, PenLine, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { Heart, Music, PenLine, ChevronDown, ChevronUp, Trash2, Calendar } from 'lucide-react';
 import StoryModal from '@/components/StoryModal';
 import ConfirmModal from '@/components/ConfirmModal';
+import WeatherCalendar from '@/components/WeatherCalendar';
+import VintageWeatherPopup from '@/components/VintageWeatherPopup';
 import { useCollectionStore } from '@/store/collectionStore';
 import { useUserStore } from '@/store/userStore';
 import { useStoryStore } from '@/store/storyStore';
@@ -21,6 +23,7 @@ export default function Collection() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [modalSong, setModalSong] = useState<Song | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [showWeatherPopup, setShowWeatherPopup] = useState(false);
 
   const collections = getUserCollections(currentUser.id);
   const collectedSongs = collections
@@ -73,6 +76,24 @@ export default function Collection() {
             <p className="text-vintage-paper/70 text-lg font-serif leading-relaxed">
               每一首收藏的歌，都藏着一段不愿忘却的时光
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Weather Calendar Section */}
+      <section className="py-8 md:py-12 border-b border-vintage-gold/10">
+        <div className="container">
+          <div className="max-w-3xl mx-auto">
+            <WeatherCalendar />
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setShowWeatherPopup(true)}
+                className="vintage-btn-outline text-sm py-2 px-5"
+              >
+                <Calendar size={15} />
+                <span>再看一次年代天气</span>
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -252,6 +273,11 @@ export default function Collection() {
         cancelText="再想想"
         onConfirm={confirmAction}
         onCancel={() => setPendingAction(null)}
+      />
+
+      <VintageWeatherPopup
+        isOpen={showWeatherPopup}
+        onClose={() => setShowWeatherPopup(false)}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface DanmakuItem {
   id: string;
@@ -41,48 +41,26 @@ export default function LyricDanmaku({
   containerHeight = 500,
 }: LyricDanmakuProps) {
   const [danmakus, setDanmakus] = useState<DanmakuItem[]>([]);
-  const lyricLines = useRef<string[]>([]);
+  const lyricLinesRef = useRef<string[]>([]);
+  const danmakusRef = useRef<DanmakuItem[]>([]);
   const spawnIntervalRef = useRef<number | null>(null);
+  const containerHeightRef = useRef(containerHeight);
+  const enabledRef = useRef(enabled);
+  const cleanupTimersRef = useRef<Set<number>>(new Set());
+
+  containerHeightRef.current = containerHeight;
+  enabledRef.current = enabled;
 
   useEffect(() => {
-    lyricLines.current = lyrics
+    lyricLinesRef.current = lyrics
       .split('\n')
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
   }, [lyrics]);
 
-  const spawnDanmaku = useCallback(() => {
-    if (lyricLines.current.length === 0) return;
-
-    const availableTops = Array.from({ length: Math.floor(containerHeight / 60) }, (_, i) => (i + 1) * 60);
-    const usedTops = new Set(danmakus.map((d) => d.top));
-    const freeTops = availableTops.filter((t) => !usedTops.has(t));
-
-    let top: number;
-    if (freeTops.length > 0) {
-      top = freeTops[Math.floor(Math.random() * freeTops.length)];
-    } else {
-      top = availableTops[Math.floor(Math.random() * availableTops.length)];
-    }
-
-    const randomLyric = lyricLines.current[Math.floor(Math.random() * lyricLines.current.length)];
-    const newDanmaku: DanmakuItem = {
-      id: generateId(),
-      text: randomLyric,
-      top,
-      speed: SPEEDS[Math.floor(Math.random() * SPEEDS.length)],
-      color: COLORS[Math.floor(Math.random() * COLORS.length)],
-    };
-
-    setDanmakus((prev) => [...prev, newDanmaku]);
-
-    const durationMap = { slow: 18000, normal: 14000, fast: 10000 };
-    const duration = durationMap[newDanmaku.speed];
-
-    window.setTimeout(() => {
-      setDanmakus((prev) => prev.filter((d) => d.id !== newDanmaku.id));
-    }, duration);
-  }, [danmakus, containerHeight]);
+  useEffect(() => {
+    danmakusRef.current = danmakus;
+  }, [danmakus]);
 
   useEffect(() => {
     if (!enabled) {
@@ -91,22 +69,67 @@ export default function LyricDanmaku({
         clearInterval(spawnIntervalRef.current);
         spawnIntervalRef.current = null;
       }
+      cleanupTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+      cleanupTimersRef.current.clear();
       return;
     }
 
-    spawnDanmaku();
+    const spawnDanmaku = () => {
+      if (!enabledRef.current) return;
+      if (lyricLinesRef.current.length === 0) return;
 
-    spawnIntervalRef.current = window.setInterval(() => {
+      const ch = containerHeightRef.current;
+      const availableTops = Array.from({ length: Math.floor(ch / 60) }, (_, i) => (i + 1) * 60);
+      const usedTops = new Set(danmakusRef.current.map((d) => d.top));
+      const freeTops = availableTops.filter((t) => !usedTops.has(t));
+
+      let top: number;
+      if (freeTops.length > 0) {
+        top = freeTops[Math.floor(Math.random() * freeTops.length)];
+      } else {
+        top = availableTops[Math.floor(Math.random() * availableTops.length)];
+      }
+
+      const randomLyric = lyricLinesRef.current[Math.floor(Math.random() * lyricLinesRef.current.length)];
+      const newDanmaku: DanmakuItem = {
+        id: generateId(),
+        text: randomLyric,
+        top,
+        speed: SPEEDS[Math.floor(Math.random() * SPEEDS.length)],
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      };
+
+      setDanmakus((prev) => [...prev, newDanmaku]);
+
+      const durationMap = { slow: 18000, normal: 14000, fast: 10000 };
+      const duration = durationMap[newDanmaku.speed];
+
+      const cleanupTimerId = window.setTimeout(() => {
+        setDanmakus((prev) => prev.filter((d) => d.id !== newDanmaku.id));
+        cleanupTimersRef.current.delete(cleanupTimerId);
+      }, duration);
+      cleanupTimersRef.current.add(cleanupTimerId);
+    };
+
+    const initialTimerId = window.setTimeout(() => {
+      spawnDanmaku();
+    }, 800);
+    cleanupTimersRef.current.add(initialTimerId);
+
+    const intervalId = window.setInterval(() => {
       spawnDanmaku();
     }, 2500 + Math.random() * 2000);
+    spawnIntervalRef.current = intervalId;
 
     return () => {
       if (spawnIntervalRef.current) {
         clearInterval(spawnIntervalRef.current);
         spawnIntervalRef.current = null;
       }
+      cleanupTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+      cleanupTimersRef.current.clear();
     };
-  }, [enabled, lyrics, spawnDanmaku]);
+  }, [enabled, lyrics]);
 
   const handleClick = (danmaku: DanmakuItem) => {
     onDanmakuClick({

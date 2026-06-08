@@ -240,3 +240,60 @@ export interface UserAuctionRecord {
   bids: AuctionBid[];
   wonAt?: string;
 }
+
+export type GiftType = 'glow-stick' | 'flower' | 'encore' | 'crown' | 'light-stick';
+
+export interface VirtualGift {
+  id: string;
+  type: GiftType;
+  name: string;
+  emoji: string;
+  cost: number;
+  description: string;
+  weight: number;
+}
+
+export interface ConcertMemory {
+  id: string;
+  userId: string;
+  userNickname: string;
+  userAvatar: string;
+  content: string;
+  createdAt: string;
+  likes: number;
+}
+
+export interface DanmakuMessage {
+  id: string;
+  userId: string;
+  userNickname: string;
+  content: string;
+  color?: string;
+  timestamp: number;
+}
+
+export interface GiftEffect {
+  id: string;
+  userId: string;
+  userNickname: string;
+  giftType: GiftType;
+  giftEmoji: string;
+  giftName: string;
+  timestamp: number;
+}
+
+export interface Concert {
+  id: string;
+  month: string;
+  singerName: string;
+  singerAvatar: string;
+  concertTitle: string;
+  concertYear: number;
+  venue: string;
+  description: string;
+  videoUrl: string;
+  setlist: string[];
+  lyrics: string;
+  coverUrl: string;
+  totalViews: number;
+}

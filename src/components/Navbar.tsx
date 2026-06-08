@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router-dom';
-import { Disc3, Calendar, Heart, BookOpen, Sparkles } from 'lucide-react';
+import { Disc3, Calendar, Heart, BookOpen, Sparkles, Camera } from 'lucide-react';
 
 export default function Navbar() {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -46,6 +46,10 @@ export default function Navbar() {
             <NavLink to="/memory-wall" className={linkClass}>
               <BookOpen size={18} />
               <span className="hidden md:inline">记忆墙</span>
+            </NavLink>
+            <NavLink to="/polaroid" className={linkClass}>
+              <Camera size={18} />
+              <span className="hidden md:inline">拍立得</span>
             </NavLink>
           </div>
         </div>

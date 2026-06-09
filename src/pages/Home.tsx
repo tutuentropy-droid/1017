@@ -13,17 +13,22 @@ import {
   Waves,
   Mic2,
   Dna,
+  Radio,
+  Gauge,
 } from 'lucide-react';
 import SongCard from '@/components/SongCard';
 import StoryCard from '@/components/StoryCard';
 import OnThisDay from '@/components/OnThisDay';
+import WalkmanPanel from '@/components/WalkmanPanel';
 import { getRandomSong, mockSongs } from '@/data/songs';
 import { useStoryStore } from '@/store/storyStore';
+import { useWalkmanStore } from '@/store/walkmanStore';
 import type { Song } from '@/types';
 
 export default function Home() {
   const navigate = useNavigate();
   const { getPublicStoriesSorted } = useStoryStore();
+  const { tapeMileage, isPlaying } = useWalkmanStore();
   const [randomSong, setRandomSong] = useState<Song | null>(null);
   const [isShuffling, setIsShuffling] = useState(false);
 
@@ -220,6 +225,75 @@ export default function Home() {
                   </span>
                 </div>
               </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Walkman Section */}
+      <section className="py-16 md:py-20 bg-vintage-brown relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 left-0 w-full h-full bg-noise opacity-50" />
+        </div>
+        <div className="absolute top-20 right-20 w-64 h-64 bg-vintage-gold/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-20 w-64 h-64 bg-vintage-brick/5 rounded-full blur-3xl" />
+
+        <div className="container relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-10">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-vintage-gold/10 border border-vintage-gold/30 mb-4">
+              <Radio size={16} className={`text-vintage-gold ${isPlaying ? 'animate-pulse' : ''}`} />
+              <span className="text-vintage-gold/90 text-sm">怀旧音乐仪式感</span>
+            </div>
+            <h2 className="vintage-heading text-3xl md:text-4xl mb-3">
+              我的虚拟随身听
+            </h2>
+            <p className="text-vintage-paper/60 font-serif mb-4">
+              像八九十年代那样，认真按下每一个按键，翻面、调音，让听音乐变成一种仪式
+            </p>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-vintage-brick/10 border border-vintage-brick/30">
+              <Gauge size={16} className="text-vintage-brick" />
+              <span className="text-vintage-brick/90 text-sm font-medium">
+                累计磁带里程: <span className="font-bold">{tapeMileage}</span> km
+              </span>
+            </div>
+          </div>
+
+          <div className="max-w-md mx-auto">
+            <WalkmanPanel />
+          </div>
+
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+            {[
+              {
+                icon: Radio,
+                title: '实体按钮',
+                desc: '按下播放、翻面、调音量，每一次操作都有真实的触感反馈',
+              },
+              {
+                icon: Gauge,
+                title: '磁带里程',
+                desc: '每次操作累积里程，里程可兑换怀旧贴纸和磁带封面',
+              },
+              {
+                icon: Sparkles,
+                title: '收藏奖励',
+                desc: '收集稀有贴纸、限定磁带封面，打造专属怀旧博物馆',
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="p-5 rounded-xl bg-vintage-brownDark/40 border border-vintage-gold/20 text-center"
+              >
+                <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-vintage-gold/10 border border-vintage-gold/30 flex items-center justify-center">
+                  <item.icon size={22} className="text-vintage-gold" />
+                </div>
+                <h3 className="font-display text-vintage-gold text-lg font-semibold mb-2">
+                  {item.title}
+                </h3>
+                <p className="text-vintage-paper/50 text-sm font-serif leading-relaxed">
+                  {item.desc}
+                </p>
+              </div>
             ))}
           </div>
         </div>

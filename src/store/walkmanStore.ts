@@ -23,8 +23,11 @@ interface WalkmanState {
   isPlaying: boolean;
   currentSide: 'A' | 'B';
   volume: number;
-  currentSongIndex: number;
-  playlist: Song[];
+  currentSongIndexA: number;
+  currentSongIndexB: number;
+  playlistA: Song[];
+  playlistB: Song[];
+  activeCoverId: string | null;
   userRewards: UserReward[];
   unlockedStickers: string[];
   unlockedCovers: string[];
@@ -37,7 +40,9 @@ interface WalkmanState {
   setVolume: (volume: number) => void;
   nextSong: () => void;
   prevSong: () => void;
-  setPlaylist: (songs: Song[]) => void;
+  setPlaylists: (songsA: Song[], songsB: Song[]) => void;
+  setActiveCover: (coverId: string | null) => void;
+  getActiveCover: () => WalkmanReward | null;
   redeemReward: (rewardId: string) => boolean;
   hasReward: (rewardId: string) => boolean;
   getObtainedRewards: () => WalkmanReward[];
@@ -55,8 +60,11 @@ export const useWalkmanStore = create<WalkmanState>()(
       isPlaying: false,
       currentSide: 'A',
       volume: 60,
-      currentSongIndex: 0,
-      playlist: [],
+      currentSongIndexA: 0,
+      currentSongIndexB: 0,
+      playlistA: [],
+      playlistB: [],
+      activeCoverId: null,
       userRewards: [],
       unlockedStickers: [],
       unlockedCovers: [],
@@ -109,33 +117,61 @@ export const useWalkmanStore = create<WalkmanState>()(
 
       nextSong: () =>
         set((state) => {
+          const side = state.currentSide;
+          const playlist = side === 'A' ? state.playlistA : state.playlistB;
+          const idxKey =
+            side === 'A' ? 'currentSongIndexA' : 'currentSongIndexB';
+          const currentIdx = side === 'A' ? state.currentSongIndexA : state.currentSongIndexB;
           const next =
-            state.playlist.length > 0
-              ? (state.currentSongIndex + 1) % state.playlist.length
-              : 0;
+            playlist.length > 0 ? (currentIdx + 1) % playlist.length : 0;
           return {
-            currentSongIndex: next,
+            [idxKey]: next,
             operationCount: state.operationCount + 1,
             tapeMileage: state.tapeMileage + 4,
-          };
+          } as Partial<WalkmanState>;
         }),
 
       prevSong: () =>
         set((state) => {
+          const side = state.currentSide;
+          const playlist = side === 'A' ? state.playlistA : state.playlistB;
+          const idxKey =
+            side === 'A' ? 'currentSongIndexA' : 'currentSongIndexB';
+          const currentIdx = side === 'A' ? state.currentSongIndexA : state.currentSongIndexB;
           const prev =
-            state.playlist.length > 0
-              ? (state.currentSongIndex - 1 + state.playlist.length) %
-                state.playlist.length
+            playlist.length > 0
+              ? (currentIdx - 1 + playlist.length) % playlist.length
               : 0;
           return {
-            currentSongIndex: prev,
+            [idxKey]: prev,
             operationCount: state.operationCount + 1,
             tapeMileage: state.tapeMileage + 4,
-          };
+          } as Partial<WalkmanState>;
         }),
 
-      setPlaylist: (songs: Song[]) =>
-        set({ playlist: songs, currentSongIndex: 0 }),
+      setPlaylists: (songsA: Song[], songsB: Song[]) =>
+        set({
+          playlistA: songsA,
+          playlistB: songsB,
+          currentSongIndexA: 0,
+          currentSongIndexB: 0,
+        }),
+
+      setActiveCover: (coverId: string | null) => {
+        if (coverId === null) {
+          set({ activeCoverId: null });
+          return;
+        }
+        const state = get();
+        if (!state.unlockedCovers.includes(coverId)) return;
+        set({ activeCoverId: coverId });
+      },
+
+      getActiveCover: () => {
+        const state = get();
+        if (!state.activeCoverId) return null;
+        return walkmanRewards.find((r) => r.id === state.activeCoverId) || null;
+      },
 
       redeemReward: (rewardId: string) => {
         const state = get();
@@ -152,6 +188,10 @@ export const useWalkmanStore = create<WalkmanState>()(
           reward.type === 'tape-cover'
             ? [...state.unlockedCovers, rewardId]
             : state.unlockedCovers;
+        const newActiveCover =
+          reward.type === 'tape-cover' && state.unlockedCovers.length === 0
+            ? rewardId
+            : state.activeCoverId;
 
         set({
           tapeMileage: state.tapeMileage - reward.cost,
@@ -161,6 +201,7 @@ export const useWalkmanStore = create<WalkmanState>()(
           ],
           unlockedStickers: newStickers,
           unlockedCovers: newCovers,
+          activeCoverId: newActiveCover,
         });
         return true;
       },
@@ -187,7 +228,7 @@ export const useWalkmanStore = create<WalkmanState>()(
         }),
     }),
     {
-      name: 'walkman-storage',
+      name: 'walkman-storage-v2',
     }
   )
 );

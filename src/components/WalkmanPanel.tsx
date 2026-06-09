@@ -18,9 +18,12 @@ import {
   Disc3,
   Award,
   Sticker,
+  StickyNote,
   Gauge,
   Activity,
   Radio,
+  Palette,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useWalkmanStore, type WalkmanReward } from '@/store/walkmanStore';
 import { walkmanRewards } from '@/data/walkmanRewards';
@@ -72,6 +75,7 @@ export default function WalkmanPanel() {
   const [pressedButton, setPressedButton] = useState<string | null>(null);
   const [knobAngle, setKnobAngle] = useState(0);
   const [showStats, setShowStats] = useState(false);
+  const [showCoverPicker, setShowCoverPicker] = useState(false);
   const knobRef = useRef<HTMLDivElement>(null);
   const isDraggingKnob = useRef(false);
 
@@ -83,30 +87,44 @@ export default function WalkmanPanel() {
     isPlaying,
     currentSide,
     volume,
-    currentSongIndex,
-    playlist,
+    currentSongIndexA,
+    currentSongIndexB,
+    playlistA,
+    playlistB,
+    unlockedCovers,
+    activeCoverId,
     setPlaying,
     toggleSide,
     setVolume,
     nextSong,
     prevSong,
-    setPlaylist,
+    setPlaylists,
+    setActiveCover,
+    getActiveCover,
     redeemReward,
     hasReward,
     getObtainedRewards,
   } = useWalkmanStore();
 
   useEffect(() => {
-    if (playlist.length === 0) {
-      setPlaylist(mockSongs.slice(0, 10));
+    if (playlistA.length === 0 && playlistB.length === 0) {
+      const mid = Math.floor(mockSongs.length / 2);
+      setPlaylists(mockSongs.slice(0, mid), mockSongs.slice(mid));
     }
-  }, [playlist.length, setPlaylist]);
+  }, [playlistA.length, playlistB.length, setPlaylists]);
 
   useEffect(() => {
     setKnobAngle((volume / 100) * 270 - 135);
   }, [volume]);
 
-  const currentSong: Song | undefined = playlist[currentSongIndex];
+  const currentPlaylist = currentSide === 'A' ? playlistA : playlistB;
+  const currentSongIndex =
+    currentSide === 'A' ? currentSongIndexA : currentSongIndexB;
+  const currentSong: Song | undefined = currentPlaylist[currentSongIndex];
+  const activeCover = getActiveCover();
+  const unlockedCoversList = walkmanRewards.filter(
+    (r) => r.type === 'tape-cover' && unlockedCovers.includes(r.id)
+  );
 
   const handleButtonPress = useCallback(
     (button: string, action: () => void) => {
@@ -188,8 +206,18 @@ export default function WalkmanPanel() {
     }
   };
 
+  const handleUseCover = (coverId: string | null) => {
+    if (activeCoverId === coverId) {
+      setActiveCover(null);
+    } else {
+      setActiveCover(coverId);
+    }
+    setShowCoverPicker(false);
+  };
+
   const ownedRewards = getObtainedRewards();
-  const displayRewards = activeShopTab === 'shop' ? walkmanRewards : ownedRewards;
+  const displayRewards =
+    activeShopTab === 'shop' ? walkmanRewards : ownedRewards;
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -202,7 +230,8 @@ export default function WalkmanPanel() {
             '0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.3)',
         }}
       >
-        <div className="absolute inset-0 opacity-20 pointer-events-none"
+        <div
+          className="absolute inset-0 opacity-20 pointer-events-none"
           style={{
             backgroundImage:
               "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E\")",
@@ -218,9 +247,7 @@ export default function WalkmanPanel() {
               <div className="relative">
                 <Radio
                   size={24}
-                  className={`text-vintage-gold ${
-                    isPlaying ? 'animate-pulse' : ''
-                  }`}
+                  className={`text-vintage-gold ${isPlaying ? 'animate-pulse' : ''}`}
                 />
                 {isPlaying && (
                   <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-vintage-brick animate-pulse" />
@@ -233,7 +260,11 @@ export default function WalkmanPanel() {
                 <div className="flex items-center gap-2 text-xs">
                   <Gauge size={12} className="text-vintage-gold/60" />
                   <span className="text-vintage-gold/70">
-                    磁带里程: <span className="text-vintage-gold font-bold">{tapeMileage}</span> km
+                    磁带里程:{' '}
+                    <span className="text-vintage-gold font-bold">
+                      {tapeMileage}
+                    </span>{' '}
+                    km
                   </span>
                 </div>
               </div>
@@ -276,19 +307,25 @@ export default function WalkmanPanel() {
                   <p className="text-vintage-gold text-xl font-bold font-display">
                     {flipCount}
                   </p>
-                  <p className="text-vintage-paper/50 text-[10px] mt-0.5">翻面次数</p>
+                  <p className="text-vintage-paper/50 text-[10px] mt-0.5">
+                    翻面次数
+                  </p>
                 </div>
                 <div className="text-center border-x border-vintage-gold/20">
                   <p className="text-vintage-gold text-xl font-bold font-display">
                     {volumeAdjustCount}
                   </p>
-                  <p className="text-vintage-paper/50 text-[10px] mt-0.5">调音次数</p>
+                  <p className="text-vintage-paper/50 text-[10px] mt-0.5">
+                    调音次数
+                  </p>
                 </div>
                 <div className="text-center">
                   <p className="text-vintage-gold text-xl font-bold font-display">
                     {operationCount}
                   </p>
-                  <p className="text-vintage-paper/50 text-[10px] mt-0.5">总操作数</p>
+                  <p className="text-vintage-paper/50 text-[10px] mt-0.5">
+                    总操作数
+                  </p>
                 </div>
               </div>
             </div>
@@ -296,15 +333,38 @@ export default function WalkmanPanel() {
 
           <div
             className={`overflow-hidden transition-all duration-500 ease-in-out ${
-              isExpanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+              isExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
             }`}
           >
             <div className="px-5 pb-5 space-y-4">
+              {activeCover && (
+                <div className="flex items-center gap-2">
+                  <div
+                    className="flex-1 h-12 rounded-lg overflow-hidden relative"
+                    style={{
+                      border: '1px solid #4a3728',
+                    }}
+                  >
+                    <img
+                      src={activeCover.imageUrl}
+                      alt={activeCover.name}
+                      className="w-full h-full object-cover opacity-80"
+                    />
+                  </div>
+                  <button
+                    onClick={() => setShowCoverPicker(true)}
+                    className="p-2 rounded-lg bg-vintage-gold/10 border border-vintage-gold/30 text-vintage-gold/70 hover:bg-vintage-gold/20 transition-colors"
+                    title="更换封面"
+                  >
+                    <Palette size={18} />
+                  </button>
+                </div>
+              )}
+
               <div
                 className="relative rounded-xl p-4 overflow-hidden"
                 style={{
-                  background:
-                    'linear-gradient(180deg, #1a0f08 0%, #0d0704 100%)',
+                  background: 'linear-gradient(180deg, #1a0f08 0%, #0d0704 100%)',
                   boxShadow:
                     'inset 0 2px 8px rgba(0,0,0,0.5), inset 0 -1px 0 rgba(255,255,255,0.03)',
                   border: '2px solid #3E2723',
@@ -349,7 +409,8 @@ export default function WalkmanPanel() {
                         'inset 0 2px 4px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3)',
                     }}
                   >
-                    <div className="absolute top-2 left-2 right-2 h-14 rounded opacity-80"
+                    <div
+                      className="absolute top-2 left-2 right-2 h-14 rounded opacity-80"
                       style={{
                         background:
                           'linear-gradient(180deg, #f5e6c8 0%, #e8d4a8 100%)',
@@ -398,7 +459,8 @@ export default function WalkmanPanel() {
                         <div className="absolute inset-5 rounded-full bg-vintage-brownDark border border-vintage-gold/20" />
                       </div>
 
-                      <div className="flex-1 mx-4 h-6 relative rounded overflow-hidden"
+                      <div
+                        className="flex-1 mx-4 h-6 relative rounded overflow-hidden"
                         style={{
                           background:
                             'linear-gradient(180deg, #0d0704 0%, #1a0f08 100%)',
@@ -461,6 +523,18 @@ export default function WalkmanPanel() {
                   <span>DOLBY NR</span>
                 </div>
               </div>
+
+              {!activeCover && (
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    onClick={() => setShowCoverPicker(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-vintage-gold/10 border border-vintage-gold/20 text-vintage-gold/70 text-[11px] hover:bg-vintage-gold/20 transition-colors"
+                  >
+                    <ImageIcon size={14} />
+                    <span>更换磁带封面</span>
+                  </button>
+                </div>
+              )}
 
               <div className="flex items-center justify-center gap-3">
                 <button
@@ -559,7 +633,9 @@ export default function WalkmanPanel() {
                       isFlipping ? 'animate-spin' : ''
                     }`}
                   />
-                  <span className="text-vintage-mossLight">翻面</span>
+                  <span className="text-vintage-mossLight">
+                    翻面到{currentSide === 'A' ? 'B' : 'A'}面
+                  </span>
                 </button>
 
                 <div className="flex items-center gap-3">
@@ -597,13 +673,14 @@ export default function WalkmanPanel() {
                         </span>
                       </div>
                     </div>
-                    <div className="absolute -inset-1 rounded-full pointer-events-none"
+                    <div
+                      className="absolute -inset-1 rounded-full pointer-events-none"
                       style={{
                         background:
                           'conic-gradient(from 135deg, transparent 0deg, rgba(212,175,55,0.3) ' +
-                          ((volume / 100) * 270) +
+                          (volume / 100) * 270 +
                           'deg, transparent ' +
-                          ((volume / 100) * 270) +
+                          (volume / 100) * 270 +
                           'deg)',
                         WebkitMask:
                           'radial-gradient(circle, transparent 52%, black 54%)',
@@ -723,8 +800,10 @@ export default function WalkmanPanel() {
                   {displayRewards.map((reward) => {
                     const owned = hasReward(reward.id);
                     const canAfford = tapeMileage >= reward.cost;
+                    const isActiveCover = activeCoverId === reward.id;
                     const Icon = typeIcons[reward.type];
                     const style = rarityStyles[reward.rarity];
+                    const isOwnedTab = activeShopTab === 'owned';
 
                     return (
                       <div
@@ -749,12 +828,10 @@ export default function WalkmanPanel() {
                               传说
                             </span>
                           )}
-                          {owned && (
-                            <div className="absolute inset-0 bg-vintage-moss/70 flex items-center justify-center">
-                              <div className="text-center text-vintage-paper">
-                                <Check size={36} className="mx-auto mb-1" />
-                                <p className="text-sm font-bold">已获得</p>
-                              </div>
+                          {isOwnedTab && isActiveCover && (
+                            <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-vintage-gold text-vintage-brown text-[10px] font-bold flex items-center gap-1">
+                              <Check size={10} />
+                              使用中
                             </div>
                           )}
                         </div>
@@ -776,7 +853,35 @@ export default function WalkmanPanel() {
                           <p className="text-vintage-inkLight/70 text-xs mb-3 line-clamp-2">
                             {reward.description}
                           </p>
-                          {activeShopTab === 'shop' && (
+                          {isOwnedTab ? (
+                            reward.type === 'tape-cover' ? (
+                              <button
+                                onClick={() => handleUseCover(reward.id)}
+                                className={`w-full py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 transition-all ${
+                                  isActiveCover
+                                    ? 'bg-vintage-moss/20 text-vintage-moss'
+                                    : 'bg-vintage-gold text-vintage-brown hover:bg-vintage-goldLight'
+                                }`}
+                              >
+                                {isActiveCover ? (
+                                  <>
+                                    <Check size={14} />
+                                    取消使用
+                                  </>
+                                ) : (
+                                  <>
+                                    <Palette size={14} />
+                                    使用此封面
+                                  </>
+                                )}
+                              </button>
+                            ) : (
+                              <div className="w-full py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 bg-vintage-inkLight/10 text-vintage-inkLight/60">
+                                <StickyNote size={14} />
+                                已收藏
+                              </div>
+                            )
+                          ) : (
                             <button
                               onClick={() => handleRedeem(reward)}
                               disabled={owned || !canAfford}
@@ -805,6 +910,86 @@ export default function WalkmanPanel() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCoverPicker && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="vintage-card max-w-md w-full overflow-hidden animate-popup-bounce-in">
+            <div className="flex items-center justify-between p-5 border-b border-vintage-gold/20">
+              <div>
+                <h3 className="vintage-heading text-lg text-vintage-ink">
+                  选择磁带封面
+                </h3>
+                <p className="text-vintage-inkLight text-xs mt-1">
+                  选择一个封面装饰你的随身听
+                </p>
+              </div>
+              <button
+                onClick={() => setShowCoverPicker(false)}
+                className="text-vintage-inkLight/50 hover:text-vintage-ink transition-colors p-1"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-5">
+              {unlockedCoversList.length === 0 ? (
+                <div className="text-center py-8">
+                  <Disc3 size={40} className="mx-auto text-vintage-gold/30 mb-3" />
+                  <p className="text-vintage-inkLight font-serif mb-1">
+                    还没有兑换任何封面
+                  </p>
+                  <p className="text-vintage-inkLight/60 text-xs">
+                    去兑换商店获取磁带封面吧
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowCoverPicker(false);
+                      setShowShop(true);
+                      setActiveShopTab('shop');
+                    }}
+                    className="mt-4 vintage-btn-gold text-sm"
+                  >
+                    <Gift size={16} />
+                    <span>前往兑换</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => handleUseCover(null)}
+                    className={`aspect-[4/3] rounded-lg border-2 border-dashed border-vintage-gold/30 flex flex-col items-center justify-center gap-2 hover:bg-vintage-gold/20 transition-all hover:border-vintage-gold/50 ${
+                      activeCoverId === null
+                        ? 'border-vintage-gold bg-vintage-gold/10'
+                        : ''
+                    }`}
+                  >
+                    <X size={24} className="text-vintage-inkLight/50" />
+                    <span className="text-vintage-inkLight/70 text-xs">
+                      默认封面
+                    </span>
+                  </button>
+                  {unlockedCoversList.map((cover) => (
+                    <button
+                      key={cover.id}
+                      onClick={() => handleUseCover(cover.id)}
+                      className={`aspect-[4/3] rounded-lg border-2 overflow-hidden transition-all hover:scale-[1.02] ${
+                        activeCoverId === cover.id
+                          ? 'border-vintage-gold shadow-[0_0_0_2px_rgba(212,175,55,0.3)]'
+                          : 'border-vintage-gold/30'
+                      }`}
+                    >
+                      <img
+                        src={cover.imageUrl}
+                        alt={cover.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
